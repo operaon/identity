@@ -13,10 +13,10 @@ const verificationKey = () => {
   return env.jwt.publicKey;
 };
 
-const sign = (payload, expiresIn) => jwt.sign(payload, signingKey(), {
+const sign = (payload, expiresIn, options = {}) => jwt.sign(payload, signingKey(), {
   algorithm: env.jwt.algorithm,
   issuer: env.jwt.issuer,
-  audience: env.jwt.audience,
+  audience: options.audience || env.jwt.audience,
   expiresIn,
 });
 
@@ -33,7 +33,7 @@ const verify = (token, options = {}) => {
   }
 };
 
-const generateAccessToken = (claims) => sign({ ...claims, tokenType: 'access' }, env.jwt.accessTtl);
+const generateAccessToken = (claims, options = {}) => sign({ ...claims, tokenType: 'access' }, env.jwt.accessTtl, options);
 const generateRefreshToken = (claims) => sign({ ...claims, tokenType: 'refresh' }, env.jwt.refreshTtl);
 
 module.exports = {

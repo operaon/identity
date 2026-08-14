@@ -298,9 +298,32 @@ const switchTenant = async (userId, tenantId, metadata = {}) => {
   return { user: userView(context.user), ...(await createSessionTokens(context, metadata)), tenantId: context.tenantId, roles: context.roles, permissions: context.permissions };
 };
 
-const issueServiceToken = async ({ userId, tenantId, audience = ['operaon-api'], permissions = [] }) => {
-  const claims = { sub: userId || 'operaon-service', id: userId || 'operaon-service', tenantId: tenantId || null, roles: ['service'], permissions, organizationIds: [], tokenVersion: 0, service: true };
-  return { accessToken: generateAccessToken({ ...claims, aud: audience }), expiresIn: env.jwt.accessTtl };
+const issueServiceToken = async ({ userId, tenantId, audience, permissions = [] }) => {
+  const requestedAudience = Array.isArray(audience) ? audience : (audience ? [audience] : env.jwt.serviceAudiences);
+  const audienceIsAllowed = requestedAudience.length > 0
+    && requestedAudience.every((item) => env.jwt.serviceAudiences.includes(item));
+  if (!audienceIsAllowed) {
+    throw new AuthenticationError('Audience de serviço não autorizada', 'SERVICE_AUDIENCE_NOT_ALLOWED');
+  }
+
+  const normalizedPermissions = Array.isArray(permissions)
+    ? permissions.filter((permission) => typeof permission === 'string' && permission.length <= 160).slice(0, 200)
+    : [];
+  const claims = {
+    sub: userId || 'operaon-service',
+    id: userId || 'operaon-service',
+    tenantId: tenantId || null,
+    roles: ['service'],
+    permissions: normalizedPermissions,
+    organizationIds: [],
+    tokenVersion: 0,
+    service: true,
+  };
+  return {
+    accessToken: generateAccessToken(claims, { audience: requestedAudience }),
+    expiresIn: env.jwt.accessTtl,
+    audience: requestedAudience,
+  };
 };
 
 module.exports = { register, registerProfessional, registerPatient, login, verifyMfaLogin, refresh, logout, logoutAll, requestPasswordReset, resetPassword, verifyEmail, resendVerification, getProfile, switchTenant, issueServiceToken, buildAuthContext, userView };

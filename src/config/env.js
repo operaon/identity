@@ -29,6 +29,26 @@ if (!['HS256', 'RS256', 'EdDSA'].includes(jwtAlgorithm)) {
 }
 
 const jwtSecret = requiredInProduction('JWT_SECRET', isTest ? 'identity-test-secret-change-me' : 'identity-development-secret-change-me');
+const parseServiceKeys = () => {
+  const configured = process.env.SERVICE_API_KEYS || '';
+  const entries = configured.split(',').map((entry) => entry.trim()).filter(Boolean);
+  const keys = {};
+  for (const entry of entries) {
+    const separator = entry.indexOf(':');
+    if (separator <= 0 || separator === entry.length - 1) {
+      throw new Error('SERVICE_API_KEYS deve usar o formato keyId:secret,keyIdAnterior:secret');
+    }
+    keys[entry.slice(0, separator)] = entry.slice(separator + 1);
+  }
+  if (Object.keys(keys).length === 0) {
+    keys[process.env.COMMUNICATION_KEY_ID || 'service-key-v1'] = requiredInProduction(
+      'SERVICE_API_KEY',
+      isTest ? 'identity-test-service-key' : 'identity-development-service-key',
+    );
+  }
+  return keys;
+};
+const serviceApiKeys = parseServiceKeys();
 if (jwtAlgorithm === 'HS256' && isProduction && jwtSecret.length < 32) {
   throw new Error('JWT_SECRET precisa ter pelo menos 32 caracteres em produção');
 }
@@ -43,7 +63,15 @@ module.exports = {
   port,
   trustProxyHops: Number(process.env.TRUST_PROXY_HOPS || 1),
   serviceName: process.env.SERVICE_NAME || 'operaon_identity',
-  serviceApiKey: requiredInProduction('SERVICE_API_KEY', process.env.IDENTITY_SERVICE_API_KEY || (isTest ? 'identity-test-service-key' : 'identity-development-service-key')),
+  serviceApiKey: serviceApiKeys[process.env.COMMUNICATION_KEY_ID || 'service-key-v1'],
+  serviceApiKeys,
+  communication: {
+    keyId: process.env.COMMUNICATION_KEY_ID || 'service-key-v1',
+    protocolVersion: process.env.COMMUNICATION_PROTOCOL_VERSION || '1',
+    requireServiceId: process.env.REQUIRE_SERVICE_IDENTITY_HEADERS === 'true' || isProduction,
+    requireMtls: process.env.REQUIRE_MTLS === 'true' || isProduction,
+    trustedMtlsHeader: process.env.TRUSTED_MTLS_HEADER || 'x-ssl-client-verify',
+  },
   jwt: {
     algorithm: jwtAlgorithm,
     secret: jwtSecret,
@@ -51,6 +79,7 @@ module.exports = {
     publicKey: normalizeKey(process.env.JWT_PUBLIC_KEY),
     issuer: process.env.JWT_ISSUER || 'operaon-identity',
     audience: parseList(process.env.JWT_AUDIENCE, ['operaon-api']),
+    serviceAudiences: parseList(process.env.JWT_SERVICE_AUDIENCES, ['operaon-api', 'operaon-catalog', 'operaon-faturament', 'operaon-pay', 'operaon-agend', 'operaon-chat']),
     accessTtl: process.env.JWT_ACCESS_EXPIRATION || '15m',
     refreshTtl: process.env.JWT_REFRESH_EXPIRATION || '7d',
   },

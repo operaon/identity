@@ -10,6 +10,15 @@ const schemas = {
   patientRegister: z.object({ email, password, firstName: z.string().min(1).max(120), lastName: z.string().min(1).max(120), phone: z.string().max(40).optional(), tenantId: uuid.optional() }),
   login: z.object({ email, password }),
   refresh: z.object({ refreshToken: z.string().min(20) }),
+  serviceToken: z.object({
+    userId: uuid.optional(),
+    tenantId: uuid.nullish(),
+    audience: z.union([
+      z.string().min(2).max(120),
+      z.array(z.string().min(2).max(120)).min(1).max(20),
+    ]).optional(),
+    permissions: z.array(z.string().min(1).max(160)).max(200).optional(),
+  }),
   passwordResetRequest: z.object({ email }),
   passwordReset: z.object({ token: z.string().min(20), password }),
   mfa: z.object({ code: z.string().min(6).max(20) }),
