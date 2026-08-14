@@ -6,7 +6,10 @@ const routes = require('./routes');
 const { requestContext, errorHandler } = require('./middlewares/operational');
 const { toErrorResponse } = require('./utils/errors');
 
+const { communicationContext } = require('./middlewares/communicationContext');
+
 const app = express();
+app.use(communicationContext);
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 app.use(requestContext);
