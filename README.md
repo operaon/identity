@@ -143,3 +143,8 @@ O gateway possui testes unitários do adapter em `tests/identityService.test.js`
 ## Segurança operacional
 
 Logs não devem conter access tokens, refresh tokens, senhas, códigos TOTP, backup codes ou chaves de serviço. O Identity deve operar atrás de TLS, com `X-Service-Key` rotacionável, rate limit em autenticação, CORS explícito e banco isolado. A adoção de RS256/EdDSA com JWKS é o próximo passo recomendado para eliminar a distribuição de segredo simétrico entre consumidores.
+
+<!-- OPERAON-DOCUMENTATION-LINK -->
+## Documentação
+
+A documentação técnica padronizada está em [docs/INDEX.md](docs/INDEX.md). Ela inclui arquitetura, responsabilidades, segurança, contratos, operação, testes, runbooks e decisões.
