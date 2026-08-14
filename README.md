@@ -1,4 +1,15 @@
-# Operaon Identity
+# Identity
+
+> Serviço de identidade da Operaon com autenticação, autorização, sessões, RBAC dinâmico e tokens de serviço.
+
+| Item | Referência |
+|---|---|
+| Documentação | [docs/INDEX.md](docs/INDEX.md) |
+| Segurança | [SECURITY.md](SECURITY.md) |
+| Contribuição | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Processo de release | [docs/release-process.md](docs/release-process.md) |
+
+---
 
 Standalone de **Identidade e Acesso (IAM)** da Operaon. O serviço centraliza autenticação, sessões, refresh tokens rotativos, MFA/2FA, memberships multi-tenant, roles e permissões dinâmicas, sem assumir a propriedade dos dados clínicos, comerciais ou de agenda dos demais módulos.
 
