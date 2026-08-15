@@ -18,7 +18,14 @@ app.disable('x-powered-by');
 app.set('trust proxy', 1);
 app.use(requestContext);
 app.use(helmet());
-app.use(cors({ origin: true, credentials: true }));
+const allowedCorsOrigins = String(process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter((origin) => origin && origin !== '*');
+app.use(cors({
+  origin: (origin, callback) => callback(null, !origin || allowedCorsOrigins.includes(origin)),
+  credentials: allowedCorsOrigins.length > 0,
+}));
 app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: false, limit: '1mb' }));
